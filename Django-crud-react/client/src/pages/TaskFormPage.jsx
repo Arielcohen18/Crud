@@ -1,22 +1,54 @@
 import {useForm} from 'react-hook-form'
-import { createTask } from '../api/task.api'
-import { deleteTask } from '../api/task.api'
+import { useEffect } from 'react'
+import { createTask, deleteTask , updateTask, getTask} from '../api/task.api'
+import { toast } from 'react-hot-toast'
+
 import {useNavigate , useParams} from 'react-router-dom'
 
 export function TaskFormpage() {
-  const {register, handleSubmit, formState: {
-    errors
-  }} = useForm()
+  const {register, handleSubmit, formState: {errors},setValue,
+  } = useForm()
 
   const navigate = useNavigate()
   const params = useParams()
 
 
   const onSubmit = handleSubmit (async data=>{
-    await createTask(data);
+    if (params.id){ 
+      await updateTask(params.id, data)
+      toast.success('Tarea Actualizada', {
+        position: "bottom-right",
+        style: {
+          background : "#101010",
+          color : "white",
+        }
+      })
+    } else{
+      await createTask(data);
+      toast.success('Tarea creada', {
+        position: "bottom-right",
+        style: {
+          background : "#101010",
+          color : "white",
+        }
+      })
+    }
     navigate('/tasks');
  
   })
+  useEffect(()=>{
+    async function loadtask(){
+        if (params.id){
+          
+          const { data } = await getTask(params.id);
+          setValue("title", data.title);
+          setValue("description", data.description);
+        
+        }
+    }
+    loadtask();
+
+  }, [])
 
     return (
       <div>      
@@ -38,6 +70,13 @@ export function TaskFormpage() {
             if (accepted){
               await deleteTask(params.id);
               navigate('/tasks');
+              toast.success('Tarea Eliminada', {
+                position: "bottom-right",
+                style: {
+                  background : "#101010",
+                  color : "white",
+                }
+              })
             }
           } }>Delete</button>
         }
